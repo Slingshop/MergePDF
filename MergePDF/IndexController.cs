@@ -124,6 +124,8 @@ namespace MergePDF
                 FilePath = pdfpath
             });
 
+            File.Delete(pdfpath);
+
             return "http://s3-us-west-2.amazonaws.com/cache.lulatools.net/" + key;
         }
 
@@ -186,6 +188,8 @@ namespace MergePDF
                 ContentType = "application/pdf",
                 FilePath = pdfpath
             });
+
+            File.Delete(pdfpath);
 
             return "http://s3-us-west-2.amazonaws.com/cache.lulatools.net/" + key;
 
