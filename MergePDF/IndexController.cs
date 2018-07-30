@@ -260,12 +260,14 @@ namespace MergePDF
                     foreach (string file in fileNames)
                     {
                         reader = new PdfReader(file);
+                        PdfReader.unethicalreading = true;
                         pdf.AddDocument(reader);
                         reader.Close();
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Console.WriteLine(ex.Message);
                     merged = false;
                     if (reader != null)
                     {
