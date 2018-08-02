@@ -19,6 +19,14 @@ namespace MergePDF
     {
         public IndexController()
         {
+            Get["/"] = _ =>
+            {
+	            var r = (Response)"Response";
+	            r.StatusCode = HttpStatusCode.OK;
+
+	            return r;
+            };
+
             Post["/"] = _ =>
             {
                 string json = null;
