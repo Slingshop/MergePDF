@@ -74,7 +74,25 @@ namespace MergePDF
                 }
 
                 var urls = JsonConvert.DeserializeObject<string[]>(json);
-                var url = Create4x6(urls.First());
+                var url = CreateLabel(urls.First(), 4, 6, 5, 0.95f);
+
+                return Response.AsJson(new
+                {
+                    url = url
+                });
+            };
+
+            Post["/imageTo2point3x4"] = _ =>
+            {
+                string json = null;
+
+                using (var reader = new StreamReader(Request.Body))
+                {
+                    json = reader.ReadToEnd();
+                }
+
+                var urls = JsonConvert.DeserializeObject<string[]>(json);
+                var url = CreateLabel(urls.First(), 2.3125m, 4, -3, 0.90f);
 
                 return Response.AsJson(new
                 {
@@ -83,11 +101,11 @@ namespace MergePDF
             };
         }
 
-        public static string Create4x6(string url)
+        public static string CreateLabel(string url, decimal x, decimal y, float absoluteX, float scale)
         {
             var pdfpath = Path.GetTempFileName();
             Document doc = new Document();
-            doc.SetPageSize(new Rectangle(4 * 72, 6 * 72));
+            doc.SetPageSize(new Rectangle((float)(x * 72), (float)(y * 72)));
             doc.SetMargins(0, 0, 0, 0);
             doc.PageCount = 1;
 
@@ -103,11 +121,11 @@ namespace MergePDF
                     png.RotationDegrees = 90f;
                 }
                 
-                png.ScalePercent((float)Math.Floor(doc.PageSize.Height / Math.Max(png.Height, png.Width) * 100)* 0.95f);
+                png.ScalePercent((float)Math.Floor(doc.PageSize.Height / Math.Max(png.Height, png.Width) * 100)* scale);
 
                 //float yOffset = doc.PageSize.Height / 2 + 8;
 
-                png.SetAbsolutePosition(5f, 0f);
+                png.SetAbsolutePosition(absoluteX, 0f);
 
                 doc.Add(png);
             }
