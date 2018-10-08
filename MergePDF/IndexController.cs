@@ -74,7 +74,7 @@ namespace MergePDF
                 }
 
                 var urls = JsonConvert.DeserializeObject<string[]>(json);
-                var url = CreateLabel(urls.First(), 4, 6, 5, 0.95f);
+                var url = CreateLabel(urls.First(), 4, 6, 5, 0, 0.95f);
 
                 return Response.AsJson(new
                 {
@@ -92,7 +92,7 @@ namespace MergePDF
                 }
 
                 var urls = JsonConvert.DeserializeObject<string[]>(json);
-                var url = CreateLabel(urls.First(), 2.3125m, 4, -3, 0.90f);
+                var url = CreateLabel(urls.First(), 2.3125m, 4, 0, -8, 1f);
 
                 return Response.AsJson(new
                 {
@@ -101,7 +101,7 @@ namespace MergePDF
             };
         }
 
-        public static string CreateLabel(string url, decimal x, decimal y, float absoluteX, float scale)
+        public static string CreateLabel(string url, decimal x, decimal y, float absoluteX, float absoluteY, float scale)
         {
             var pdfpath = Path.GetTempFileName();
             Document doc = new Document();
@@ -125,7 +125,7 @@ namespace MergePDF
 
                 //float yOffset = doc.PageSize.Height / 2 + 8;
 
-                png.SetAbsolutePosition(absoluteX, 0f);
+                png.SetAbsolutePosition(absoluteX, absoluteY);
 
                 doc.Add(png);
             }
