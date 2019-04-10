@@ -179,10 +179,10 @@ namespace MergePDF
 
                     png.ScalePercent((float)Math.Floor(doc.PageSize.Width / Math.Max(png.Height, png.Width) * 100)* 0.95f);
 
-                    float yOffset = doc.PageSize.Height / 2 + 8;
+                    float yOffset = doc.PageSize.Height / 2 + -14;
 
                     if (index % 2 == 1)
-                        yOffset = 36;
+                        yOffset = 18;
 
                     png.SetAbsolutePosition((doc.PageSize.Width - png.ScaledWidth) / 2f, (doc.PageSize.Height / 2f - png.ScaledHeight) / 2f + yOffset);
 
