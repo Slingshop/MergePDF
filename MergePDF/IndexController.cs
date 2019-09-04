@@ -92,7 +92,7 @@ namespace MergePDF
                 }
 
                 var urls = JsonConvert.DeserializeObject<string[]>(json);
-                var url = CreateLabel(urls.First(), 2.3125m, 4, 0, -5, 1f);
+                var url = CreateLabel(urls.First(), 2.3125m, 4, -4, -5, .91f);
 
                 return Response.AsJson(new
                 {
