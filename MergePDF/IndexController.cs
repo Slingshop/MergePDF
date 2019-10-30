@@ -177,7 +177,7 @@ namespace MergePDF
                     if (png.Width < png.Height)
                         png.RotationDegrees = 90f;
 
-                    png.ScalePercent((float)Math.Floor(doc.PageSize.Width / Math.Max(png.Height, png.Width) * 100)* 0.95f);
+                    png.ScalePercent((float)Math.Floor(doc.PageSize.Width / Math.Max(png.Height, png.Width) * 100)* 0.85f);
 
                     float yOffset = doc.PageSize.Height / 2 + 10;
 
