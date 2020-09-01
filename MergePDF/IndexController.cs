@@ -46,6 +46,25 @@ namespace MergePDF
                 });
             };
 
+            Post["/manifest"] = _ =>
+            {
+                string json = null;
+
+                using (var reader = new StreamReader(Request.Body))
+                {
+                    json = reader.ReadToEnd();
+                }
+
+                var urls = JsonConvert.DeserializeObject<string[]>(json);
+                var url = MergePDFUrls(urls, 0.24f);
+
+                return Response.AsJson(new
+                {
+                    url = url
+
+                });
+            };
+
             Post["/images"] = _ =>
             {
                 string json = null;
@@ -101,7 +120,7 @@ namespace MergePDF
             };
         }
 
-        public static string CreateLabel(string url, decimal x, decimal y, float absoluteX, float absoluteY, float scale)
+        private static string CreateLabel(string url, decimal x, decimal y, float absoluteX, float absoluteY, float scale)
         {
             var pdfpath = Path.GetTempFileName();
             Document doc = new Document();
@@ -154,8 +173,8 @@ namespace MergePDF
 
             return "http://s3-us-west-2.amazonaws.com/cache.lulatools.net/" + key;
         }
-
-        public static string MergeImages(string[] imageURLs)
+        
+        private static string MergeImages(string[] imageURLs)
         {
             var pdfpath = Path.GetTempFileName();
             Document doc = new Document();
@@ -221,7 +240,7 @@ namespace MergePDF
 
         }
 
-        public static string MergePDFUrls(IEnumerable<string> urls)
+        private static string MergePDFUrls(IEnumerable<string> urls, float? shrinkScale = null)
         {
             List<Task<string>> tasks = new List<Task<string>>();
             using (var client = new HttpClient())
@@ -249,7 +268,14 @@ namespace MergePDF
             var destination = Path.GetTempFileName();
 
             Console.WriteLine($"Merging {files.Length} PDFs into " + destination);
-            MergePDFs(files, destination);
+            if (shrinkScale.HasValue)
+            {
+                ShrinkToFit(files, destination, shrinkScale.Value);
+            }
+            else
+            {
+                MergePDFs(files, destination);
+            }
 
             var util = new TransferUtility(RegionEndpoint.USWest2);
             var key = "batches/" + Guid.NewGuid() + ".pdf";
@@ -272,7 +298,7 @@ namespace MergePDF
             return "http://s3-us-west-2.amazonaws.com/cache.lulatools.net/" + key;
         }
 
-        public static bool MergePDFs(IEnumerable<string> fileNames, string targetPdf)
+        private static bool MergePDFs(IEnumerable<string> fileNames, string targetPdf)
         {
             bool merged = true;
             using (FileStream stream = new FileStream(targetPdf, FileMode.Create))
@@ -309,6 +335,21 @@ namespace MergePDF
                 }
             }
             return merged;
+        }
+
+        private static bool ShrinkToFit(IEnumerable<string> fileNames, string targetPdf, float scale)
+        {
+            PdfReader reader = new PdfReader(fileNames.First());
+            Document doc = new Document(PageSize.A4, 0, 0, 0, 0);
+            PdfWriter writer = PdfWriter.GetInstance(doc, new FileStream(targetPdf, FileMode.Create));
+            doc.Open();
+            PdfContentByte cb = writer.DirectContent;
+            PdfImportedPage page = writer.GetImportedPage(reader, 1); //page #1
+            cb.AddTemplate(page, scale, 0, 0, scale, 0, 0);
+            doc.Close();
+            reader.Close();
+            writer.Close();
+            return true;
         }
     }
 }
