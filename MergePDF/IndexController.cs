@@ -340,6 +340,11 @@ namespace MergePDF
         private static bool ShrinkToFit(IEnumerable<string> fileNames, string targetPdf, float scale)
         {
             PdfReader reader = new PdfReader(fileNames.First());
+            Rectangle pagesize = reader.GetPageSize(1);
+            if (pagesize.Width != 2550)
+            {
+                scale = 1;
+            }
             Document doc = new Document(PageSize.A4, 0, 0, 0, 0);
             PdfWriter writer = PdfWriter.GetInstance(doc, new FileStream(targetPdf, FileMode.Create));
             doc.Open();
