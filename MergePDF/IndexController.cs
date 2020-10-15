@@ -9,7 +9,9 @@ using Amazon;
 using Amazon.S3;
 using Amazon.S3.Transfer;
 using iTextSharp.text;
+using iTextSharp.text.html.simpleparser;
 using iTextSharp.text.pdf;
+using iTextSharp.tool.xml;
 using Nancy;
 using Newtonsoft.Json;
 
@@ -38,6 +40,26 @@ namespace MergePDF
 
                 var urls = JsonConvert.DeserializeObject<string[]>(json);
                 var url = MergePDFUrls(urls);
+
+                return Response.AsJson(new
+                {
+                    url = url
+
+                });
+            };
+
+            Post["/html"] = _ =>
+            {
+                string json = null;
+                
+                using (var reader = new StreamReader(Request.Body))
+                {
+                    json = reader.ReadToEnd();
+                }
+
+                var html = JsonConvert.DeserializeObject<string>(json);
+
+                var url = MergeHtml(html);
 
                 return Response.AsJson(new
                 {
@@ -292,6 +314,46 @@ namespace MergePDF
             {
                 File.Delete(file);
             }
+
+            File.Delete(destination);
+
+            return "http://s3-us-west-2.amazonaws.com/cache.lulatools.net/" + key;
+        }
+
+        private static string MergeHtml(string html)
+        {
+
+            Document document = new Document();
+            var destination = Path.GetTempFileName();
+
+            using (FileStream stream = new FileStream(destination, FileMode.Create))
+            {
+                var bytes = System.Text.Encoding.UTF8.GetBytes(html);
+
+                using (var input = new MemoryStream(bytes))
+                {
+                    document = new iTextSharp.text.Document(iTextSharp.text.PageSize.LETTER, 50, 50, 50, 50);
+                    var writer = PdfWriter.GetInstance(document, stream);
+                    writer.CloseStream = false;
+                    document.Open();
+
+                    var xmlWorker = XMLWorkerHelper.GetInstance();
+                    xmlWorker.ParseXHtml(writer, document, input, null, Encoding.UTF8);
+                    document.Close();
+                }
+
+            }
+
+            var util = new TransferUtility(RegionEndpoint.USWest2);
+            var key = "batches/" + Guid.NewGuid() + ".pdf";
+            util.Upload(new TransferUtilityUploadRequest()
+            {
+                BucketName = "cache.lulatools.net",
+                Key = key,
+                CannedACL = S3CannedACL.PublicRead,
+                ContentType = "application/pdf",
+                FilePath = destination
+            });
 
             File.Delete(destination);
 
